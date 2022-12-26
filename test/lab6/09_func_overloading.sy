@@ -1,0 +1,28 @@
+/* legal function overloading */
+int func(int a)
+{
+	return a;
+}
+int func(int a, int b, int c)
+{
+	return a + b + c;
+}
+
+/* illegal function overloading */
+int error_func(int a)
+{
+	return a + 1;
+}
+int error_func(float a)
+{
+	return 1;
+}
+
+int main()
+{
+	int ret = 0;
+	ret = func(1) + func(1,2,3);
+	float a = 1.1;
+	ret = error_func(1) + error_func(a);
+	return ret;
+}
