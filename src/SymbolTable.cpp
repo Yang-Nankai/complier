@@ -68,12 +68,28 @@ ConstantSymbolEntry::ConstantSymbolEntry(Type* type)
     assert(type->isArray());
 }
 
+
+std::string float2HEX(float x){
+    std::string res = "0X";
+	unsigned char hex[sizeof(float)];
+	unsigned char* p = (unsigned char*)&x;  //把float类型的指针强制转换为unsigned char型
+	for (int i = 0; i < sizeof(float); i++)
+	{
+		hex[i] = *p++;//把相应地址中的数据保存到unsigned char数组中     
+	}
+	for (int i = 0; i < sizeof(float); i++)//小端转大端输出
+	{
+		res+= hex[sizeof(float) - i - 1];
+	}
+    return res;
+}
 std::string ConstantSymbolEntry::toStr() {
     std::ostringstream buffer;
     if(type->isInt())
         buffer << intValue;
-    else if(type->isFloat())
-        buffer << floatValue;
+    else if(type->isFloat()){
+        buffer<<float2HEX(floatValue);
+    }        
     else if(type->isString())
         buffer << strValue;
     return buffer.str();
