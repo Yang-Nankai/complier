@@ -69,19 +69,21 @@ ConstantSymbolEntry::ConstantSymbolEntry(Type* type)
 }
 
 
-std::string float2HEX(float x){
-    std::string res = "0X";
+std::string float2HEX(float x) {
+	std::string res = "0X";
 	unsigned char hex[sizeof(float)];
 	unsigned char* p = (unsigned char*)&x;  //把float类型的指针强制转换为unsigned char型
 	for (int i = 0; i < sizeof(float); i++)
 	{
 		hex[i] = *p++;//把相应地址中的数据保存到unsigned char数组中     
 	}
+	char list[] = "0123456789ABCDEF";
 	for (int i = 0; i < sizeof(float); i++)//小端转大端输出
 	{
-		res+= hex[sizeof(float) - i - 1];
+		res += list[hex[sizeof(float) - i - 1] >> 4];
+		res += list[hex[sizeof(float) - i - 1] & 0xF];
 	}
-    return res;
+	return res;
 }
 std::string ConstantSymbolEntry::toStr() {
     std::ostringstream buffer;
