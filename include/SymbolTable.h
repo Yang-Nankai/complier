@@ -80,6 +80,7 @@ class IdentifierSymbolEntry : public SymbolEntry {
         int* intArrayValue;
         float* floatArrayValue;
         bool allZero;
+        int paramNo;
         Operand* addr; // The address of the identifier.
 
     public:
@@ -105,17 +106,21 @@ class IdentifierSymbolEntry : public SymbolEntry {
         bool isAllZero() const { return allZero; };
         Operand* getAddr() { return addr; };
         void setAddr(Operand* addr) { this->addr = addr; };
+        int getParamNo() const { return paramNo; };
 
 };
 
 class TemporarySymbolEntry : public SymbolEntry {
     private:
         int label;
+        int stack_off;
     public:
         TemporarySymbolEntry(Type* type, int label) : SymbolEntry(type, SYM_TEMPORARY), label(label){};
         virtual ~TemporarySymbolEntry(){};
         std::string toStr();
         int getLabel() const { return label; };
+        void setOffset(int offset) {this->stack_off = offset; }
+        int getOffset() { return this->stack_off; };
 };
 
 extern SymbolTable* identifiers;

@@ -1,6 +1,7 @@
 #include "Instruction.h"
 #include "BasicBlock.h"
 #include <iostream>
+#include <sstream>
 #include "Function.h"
 #include "Type.h"
 extern FILE* yyout;
@@ -464,3 +465,63 @@ void SitofpInstruction::output() const {
     Operand* src = operands[1];
     fprintf(yyout, "  %s = sitofp %s %s to float\n", dst->toStr().c_str(),src->getType()->toStr().c_str(), src->toStr().c_str());
 }
+
+//genMachineCode
+MachineOperand* Instruction::genMachineOperand(Operand* ope) {
+    auto se = ope->getEntry();
+    MachineOperand* mope = nullptr;
+    if(se->isConstant()){ //here use the int, not consider the float!!!
+    mope = new MachineOperand(MachineOperand::IMM, dynamic_cast<ConstantSymbolEntry*>(se)->getIntValue());
+    }else if(se->isTemporary()) {
+        mope = new MachineOperand(MachineOperand::VREG, dynamic_cast<TemporarySymbolEntry*>(se)->getLabel());
+    }else if(se->isVariable()) {
+        auto id_se = dynamic_cast<IdentifierSymbolEntry*>(se);
+        if(id_se->isGlobal()) {
+            mope = new MachineOperand(id_se->toStr().c_str());
+        }else if(id_se->isParam()) {
+            if(id_se->getParamNo() < 4){
+                mope = new MachineOperand(MachineOperand::REG, id_se->getParamNo());
+            }else {
+                mope = new MachineOperand(MachineOperand::REG, 3);
+            }
+        }
+        else
+            exit(0);
+    }
+    return mope;
+}
+
+MachineOperand* Instruction::genMachineReg(int reg) {
+    return new MachineOperand(MachineOperand::REG, reg);
+}
+
+MachineOperand* Instruction::genMachineVReg() {
+    return new MachineOperand(MachineOperand::VREG, SymbolTable::getLabel());
+}
+
+MachineOperand* Instruction::genMachineImm(int val) {
+    return new MachineOperand(MachineOperand::IMM, val);
+}
+
+MachineOperand* Instruction::genMachineLabel(int block_no) {
+    std::ostringstream buf;
+    buf << ".L" << block_no;
+    std::string label = buf.str();
+    return new MachineOperand(label);
+}
+
+void AllocaInstruction::genMachineCode(AsmBuilder* builder) {
+    /* HINT:
+     * Allocate stack space for local variabel
+     * Store frame offset in symbol entry */
+    auto cur_func = builder->getFunction();
+    int size = se->getType()->getSize() / 8;
+    if (size < 0)
+        size = 4;
+    int offset = cur_func->AllocSpace(size);
+    dynamic_cast<TemporarySymbolEntry*>(operands[0]->getEntry())
+        ->setOffset(-offset);
+}
+
+
+

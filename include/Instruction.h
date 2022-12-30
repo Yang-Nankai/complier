@@ -3,6 +3,8 @@
 
 #include <map>
 #include <vector>
+#include "AsmBuilder.h"
+#include <sstream>
 #include "Operand.h"
 
 class BasicBlock;
@@ -21,6 +23,12 @@ class Instruction {
     Instruction* getNext();
     Instruction* getPrev();
     virtual void output() const = 0;
+    MachineOperand* genMachineOperand(Operand*);
+    MachineOperand* genMachineReg(int reg);
+    MachineOperand* genMachineVReg();
+    MachineOperand* genMachineImm(int val);
+    MachineOperand* genMachineLabel(int block_no);
+    virtual void genMachineCode(AsmBuilder*) = 0;
 
    protected:
     unsigned instType;
@@ -51,6 +59,7 @@ class DummyInstruction : public Instruction {
    public:
     DummyInstruction() : Instruction(-1, nullptr){};
     void output() const {};
+    void genMachineCode(AsmBuilder*){};
 };
 
 //在内存中分配空间
@@ -61,6 +70,7 @@ class AllocaInstruction : public Instruction {
                       BasicBlock* insert_bb = nullptr);
     ~AllocaInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
 
    private:
     SymbolEntry* se;
@@ -73,6 +83,7 @@ class LoadInstruction : public Instruction {
                     BasicBlock* insert_bb = nullptr);
     ~LoadInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
 };
 //将值存储到内存地址中
 class StoreInstruction : public Instruction {
@@ -82,6 +93,7 @@ class StoreInstruction : public Instruction {
                      BasicBlock* insert_bb = nullptr);
     ~StoreInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
 };
 //二元运算指令, 包含一个目的操作数和两个源操作数
 class BinaryInstruction : public Instruction {
@@ -93,6 +105,7 @@ class BinaryInstruction : public Instruction {
                       BasicBlock* insert_bb = nullptr);
     ~BinaryInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
     enum { SUB, ADD, AND, OR, MUL, DIV, MOD, FADD, FSUB, FMUL, FDIV };
 };
 //关系运算指令
@@ -105,6 +118,7 @@ class CmpInstruction : public Instruction {
                    BasicBlock* insert_bb = nullptr);
     ~CmpInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
     enum { E, NE, L, GE, G, LE, FE, FNE, FL, FGE, FG, FLE};
 };
 //无条件跳转指令，直接跳转到基本块 branch
@@ -115,6 +129,7 @@ class UncondBrInstruction : public Instruction {
     void output() const;
     void setBranch(BasicBlock*);
     BasicBlock* getBranch();
+    void genMachineCode(AsmBuilder*);
 
    protected:
     BasicBlock* branch;
@@ -133,6 +148,7 @@ class CondBrInstruction : public Instruction {
     BasicBlock* getTrueBranch();
     void setFalseBranch(BasicBlock*);
     BasicBlock* getFalseBranch();
+    void genMachineCode(AsmBuilder*);
 
    protected:
     BasicBlock* true_branch;
@@ -145,6 +161,7 @@ class RetInstruction : public Instruction {
     RetInstruction(Operand* src, BasicBlock* insert_bb = nullptr);
     ~RetInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
 };
 //函数调用指令
 class CallInstruction : public Instruction {
@@ -157,6 +174,7 @@ class CallInstruction : public Instruction {
                     std::vector<Operand*> params,
                     BasicBlock* insert_bb = nullptr);
     void output() const;
+    void genMachineCode(AsmBuilder*);
 };
 //把操作数使用0扩展为ty2类型
 class ZextInstruction : public Instruction {
@@ -165,12 +183,14 @@ class ZextInstruction : public Instruction {
                     Operand* src,
                     BasicBlock* insert_bb = nullptr);
     void output() const;
+    void genMachineCode(AsmBuilder*);
 };
 
 class XorInstruction : public Instruction {
    public:
     XorInstruction(Operand* dst, Operand* src, BasicBlock* insert_bb = nullptr);
     void output() const;
+    void genMachineCode(AsmBuilder*);
 };
 // GetElementPtr指令,是一条指针计算语句，本身并不进行任何数据的访问或修改，只进行指针的计算
 class GepInstruction : public Instruction {
@@ -184,6 +204,7 @@ class GepInstruction : public Instruction {
                    BasicBlock* insert_bb = nullptr,
                    bool first = false);
     void output() const;
+    void genMachineCode(AsmBuilder*);
     
 };
 
@@ -192,6 +213,7 @@ class SitofpInstruction : public Instruction {
     public:
         SitofpInstruction(Operand* dst, Operand* src, BasicBlock* insert_bb = nullptr);
         void output() const;
+        void genMachineCode(AsmBuilder*);
 };
 
 #endif
